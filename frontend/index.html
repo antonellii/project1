@@ -3,35 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Project1</title>
+    <title>Lunar</title>
     <link rel="stylesheet" href="/src/style.css" />
   </head>
   <body>
-    <header class="header">
-      <nav class="nav">
-        <span class="nav__logo">Project1</span>
-      </nav>
-    </header>
-
-    <main class="main">
-      <h1 class="page-title">Minhas Tarefas</h1>
-
-      <form class="form" id="form-tarefa">
-        <input class="input" id="input-titulo" type="text"
-          placeholder="Nova tarefa..." maxlength="100" required />
-        <input class="input" id="input-descricao" type="text"
-          placeholder="Descricao (opcional)" maxlength="500" />
-        <button class="btn btn--primary" type="submit">Adicionar</button>
-      </form>
-
-      <ul class="lista" id="lista-tarefas"></ul>
-      <p class="vazio" id="vazio" hidden>Nenhuma tarefa ainda. Adicione uma acima.</p>
-    </main>
-
-    <footer class="footer">
-      <p>&copy; 2026 Project1</p>
-    </footer>
-
+    <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
