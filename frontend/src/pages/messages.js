@@ -1,4 +1,5 @@
 import { get, post } from '../api.js'
+import { avatarHtml } from './profile.js'
 
 let activeConvId  = null
 let currentUserId = null
@@ -28,8 +29,13 @@ export async function mount(container) {
 
       <section class="chat-panel" id="chat-panel">
         <div class="chat-empty">
-          <p style="font-size:2rem">🌙</p>
-          <p>Selecione uma conversa ou inicie uma nova.</p>
+          <div class="placeholder-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
+          <h1>Suas mensagens</h1>
+          <p>Selecione uma conversa ou inicie uma nova.<br/>Você só pode enviar mensagens para quem segue.</p>
         </div>
       </section>
     </div>
@@ -51,12 +57,9 @@ async function loadConversations() {
       return
     }
     list.innerHTML = convs.map(c => convItem(c)).join('')
-    list.querySelectorAll('.conv-item').forEach(el => {
-      el.addEventListener('click', () => openConversation(
-        parseInt(el.dataset.id),
-        el.dataset.username,
-        el.dataset.name,
-      ))
+    convs.forEach(c => {
+      list.querySelector(`[data-id="${c.id}"]`)
+        ?.addEventListener('click', () => openConversation(c.id, c.other_user))
     })
     if (activeConvId) {
       list.querySelector(`[data-id="${activeConvId}"]`)?.classList.add('active')
@@ -67,16 +70,14 @@ async function loadConversations() {
 }
 
 function convItem(c) {
-  const initial = c.other_user.display_name[0].toUpperCase()
   const preview = c.last_message
     ? c.last_message.length > 35 ? c.last_message.slice(0, 35) + '…' : c.last_message
     : 'Nenhuma mensagem ainda'
-  const unread  = c.unread_count > 0 ? `<span class="conv-badge">${c.unread_count}</span>` : ''
+  const unread = c.unread_count > 0 ? `<span class="conv-badge">${c.unread_count}</span>` : ''
 
   return `
-    <div class="conv-item ${activeConvId === c.id ? 'active' : ''}"
-      data-id="${c.id}" data-username="${c.other_user.username}" data-name="${c.other_user.display_name}">
-      <div class="avatar">${initial}</div>
+    <div class="conv-item ${activeConvId === c.id ? 'active' : ''}" data-id="${c.id}">
+      ${avatarHtml(c.other_user)}
       <div class="conv-info">
         <div class="conv-name-row">
           <span class="conv-name">${c.other_user.display_name}</span>
@@ -88,7 +89,7 @@ function convItem(c) {
   `
 }
 
-async function openConversation(convId, username, displayName) {
+async function openConversation(convId, otherUser) {
   clearInterval(pollInterval)
   activeConvId = convId
 
@@ -96,26 +97,27 @@ async function openConversation(convId, username, displayName) {
   document.querySelector(`[data-id="${convId}"]`)?.classList.add('active')
 
   const panel = document.getElementById('chat-panel')
-  const initial = displayName[0].toUpperCase()
 
   panel.innerHTML = `
     <div class="chat-header">
-      <div class="avatar">${initial}</div>
+      ${avatarHtml(otherUser)}
       <div>
-        <p class="chat-header-name">${displayName}</p>
-        <a href="#user/${username}" class="chat-header-user">@${username}</a>
+        <p class="chat-header-name">${otherUser.display_name}</p>
+        <a href="#user/${otherUser.username}" class="chat-header-user">@${otherUser.username}</a>
       </div>
     </div>
     <div class="chat-messages" id="chat-messages">
       <p style="color:var(--text-muted); font-size:0.875rem; text-align:center">Carregando...</p>
     </div>
     <div class="chat-input-bar">
-      <textarea class="chat-textarea" id="chat-input" placeholder="Escreva uma mensagem..." rows="1"></textarea>
-      <button class="btn--send" id="send-btn">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
-        </svg>
-      </button>
+      <div class="chat-input-inner">
+        <textarea class="chat-textarea" id="chat-input" placeholder="Escreva uma mensagem..." rows="1"></textarea>
+        <button class="btn--send" id="send-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
     </div>
   `
 
@@ -220,7 +222,7 @@ async function openNewMsgModal() {
     listEl.innerHTML = follows.map(u => `
       <div class="modal-user-row">
         <div class="modal-user-info">
-          <div class="avatar">${u.display_name[0].toUpperCase()}</div>
+          ${avatarHtml(u)}
           <div>
             <p class="user-card__name">${u.display_name}</p>
             <p class="user-card__username">@${u.username}</p>
@@ -237,7 +239,7 @@ async function openNewMsgModal() {
           const conv = await post(`/messages/?username=${btn.dataset.username}`, {})
           overlay.remove()
           await loadConversations()
-          openConversation(conv.id, conv.other_user.username, conv.other_user.display_name)
+          openConversation(conv.id, conv.other_user)
         } catch (err) {
           overlay.querySelector('#new-msg-error').textContent = err.message
           overlay.querySelector('#new-msg-error').classList.add('visible')

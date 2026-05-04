@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
+from pathlib import Path
+import uuid, shutil
 
 from database import get_db
-from models import User, Post, Follow
+from models import User, Post, Follow, Notification
 from schemas import UserOut, UserProfileOut, UserUpdate, PostOut
 from auth import get_current_user, get_optional_user
 
@@ -46,6 +48,28 @@ def update_me(
 ):
     for campo, valor in dados.model_dump(exclude_unset=True).items():
         setattr(current_user, campo, valor)
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+
+# ── Upload de avatar ──────────────────────────────────
+AVATAR_DIR = Path(__file__).parent.parent / "uploads" / "avatars"
+ALLOWED    = {"jpg", "jpeg", "png", "webp"}
+
+@router.post("/me/avatar", response_model=UserOut)
+async def upload_avatar(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    ext = (file.filename or "").rsplit(".", 1)[-1].lower()
+    if ext not in ALLOWED:
+        raise HTTPException(status_code=400, detail="Formato invalido. Use JPG, PNG ou WEBP.")
+    filename = f"{uuid.uuid4()}.{ext}"
+    with open(AVATAR_DIR / filename, "wb") as f:
+        shutil.copyfileobj(file.file, f)
+    current_user.avatar_url = f"/uploads/avatars/{filename}"
     db.commit()
     db.refresh(current_user)
     return current_user
@@ -143,6 +167,7 @@ def follow(
     ).first()
     if not exists:
         db.add(Follow(follower_id=current_user.id, followed_id=user.id))
+        db.add(Notification(user_id=user.id, from_user_id=current_user.id, type="follow"))
         db.commit()
 
 

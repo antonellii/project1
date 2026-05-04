@@ -1,5 +1,22 @@
 import './style.css'
 import { isLogged, clearToken } from './auth.js'
+import { get, patch } from './api.js'
+
+// ── Tema ──────────────────────────────────────────────
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme)
+  localStorage.setItem('lunar_theme', theme)
+  document.querySelectorAll('.theme-dot').forEach(d => {
+    d.classList.toggle('theme-dot--active', d.dataset.t === theme)
+  })
+}
+
+function initTheme() {
+  const saved = localStorage.getItem('lunar_theme') || 'light'
+  document.documentElement.setAttribute('data-theme', saved)
+}
+
+initTheme()
 
 export function moonLogo(size = 28) {
   return `
@@ -9,6 +26,8 @@ export function moonLogo(size = 28) {
     </svg>
   `
 }
+
+const BELL_ICON = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`
 
 const NAV = [
   {
@@ -55,6 +74,82 @@ function sidebar(active) {
   `
 }
 
+function notificationText(n) {
+  const name = n.from_user.display_name
+  if (n.type === 'follow')  return `<strong>${name}</strong> começou a te seguir`
+  if (n.type === 'message') return `<strong>${name}</strong> te enviou uma mensagem`
+  if (n.type === 'post')    return `<strong>${name}</strong> fez uma nova publicação`
+  return `<strong>${name}</strong> interagiu com você`
+}
+
+function timeAgo(dateStr) {
+  const diff = (Date.now() - new Date(dateStr).getTime()) / 1000
+  if (diff < 60)   return 'agora'
+  if (diff < 3600) return `${Math.floor(diff / 60)}min`
+  if (diff < 86400)return `${Math.floor(diff / 3600)}h`
+  return `${Math.floor(diff / 86400)}d`
+}
+
+let notifOpen = false
+
+async function setupNotifications() {
+  const btn   = document.getElementById('notif-btn')
+  const badge = document.getElementById('notif-badge')
+  const panel = document.getElementById('notif-panel')
+  if (!btn) return
+
+  async function refreshBadge() {
+    try {
+      const { count } = await get('/notifications/unread-count')
+      badge.textContent = count > 0 ? (count > 9 ? '9+' : count) : ''
+      badge.style.display = count > 0 ? 'flex' : 'none'
+    } catch {}
+  }
+
+  await refreshBadge()
+  setInterval(refreshBadge, 30000)
+
+  btn.addEventListener('click', async (e) => {
+    e.stopPropagation()
+    notifOpen = !notifOpen
+    panel.classList.toggle('notif-panel--open', notifOpen)
+
+    if (notifOpen) {
+      panel.innerHTML = `<p class="notif-loading">Carregando...</p>`
+      try {
+        const notifs = await get('/notifications/')
+        await patch('/notifications/read', {})
+        badge.style.display = 'none'
+        badge.textContent = ''
+
+        if (notifs.length === 0) {
+          panel.innerHTML = `<p class="notif-empty">Nenhuma notificação ainda.</p>`
+          return
+        }
+
+        panel.innerHTML = notifs.map(n => `
+          <div class="notif-item ${n.read ? '' : 'notif-item--unread'}">
+            <div class="avatar notif-avatar">${n.from_user.display_name[0].toUpperCase()}</div>
+            <div class="notif-body">
+              <p class="notif-text">${notificationText(n)}</p>
+              <span class="notif-time">${timeAgo(n.created_at)}</span>
+            </div>
+          </div>
+        `).join('')
+      } catch {
+        panel.innerHTML = `<p class="notif-empty" style="color:#EF4444">Erro ao carregar.</p>`
+      }
+    }
+  })
+
+  document.addEventListener('click', (e) => {
+    if (notifOpen && !panel.contains(e.target) && e.target !== btn) {
+      notifOpen = false
+      panel.classList.remove('notif-panel--open')
+    }
+  })
+}
+
 async function navigate() {
   const app  = document.getElementById('app')
   const raw  = location.hash.slice(1) || 'home'
@@ -69,10 +164,27 @@ async function navigate() {
 
   const activeNav    = ['home','explore','publish','messages','profile'].includes(hash) ? hash : ''
   const isFullLayout = hash === 'messages'
+  const currentTheme = localStorage.getItem('lunar_theme') || 'light'
+
   app.innerHTML = `
     <div class="layout">
       ${sidebar(activeNav)}
       <main class="${isFullLayout ? 'content--full' : 'content'}" id="page-content"></main>
+      <div class="notif-wrapper">
+        <button class="notif-btn" id="notif-btn" title="Notificações">
+          ${BELL_ICON}
+          <span class="notif-badge" id="notif-badge" style="display:none"></span>
+        </button>
+        <div class="notif-panel" id="notif-panel"></div>
+      </div>
+      ${isFullLayout ? '' : `
+      <div class="theme-switcher">
+        <span class="theme-label">Tema</span>
+        <div class="theme-dots">
+          <button class="theme-dot theme-dot--light ${currentTheme === 'light' ? 'theme-dot--active' : ''}" data-t="light" title="Claro"></button>
+          <button class="theme-dot theme-dot--dark  ${currentTheme === 'dark'  ? 'theme-dot--active' : ''}" data-t="dark"  title="Escuro"></button>
+        </div>
+      </div>`}
     </div>
   `
 
@@ -80,6 +192,13 @@ async function navigate() {
     clearToken()
     location.hash = 'login'
   })
+
+  document.querySelectorAll('.theme-dot').forEach(dot => {
+    dot.addEventListener('click', () => applyTheme(dot.dataset.t))
+  })
+
+  notifOpen = false
+  await setupNotifications()
 
   const content = document.getElementById('page-content')
   const pages   = { home: 'home', explore: 'explore', publish: 'publish', messages: 'messages', profile: 'profile', user: 'profile' }

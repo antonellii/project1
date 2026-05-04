@@ -3,7 +3,7 @@ from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import User, Follow, Conversation, Message
+from models import User, Follow, Conversation, Message, Notification
 from schemas import MessageIn, MessageOut, ConversationOut
 from auth import get_current_user
 from routers.users import build_profile
@@ -130,13 +130,15 @@ def send_message(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    get_conv_or_404(conv_id, current_user.id, db)
+    conv = get_conv_or_404(conv_id, current_user.id, db)
     msg = Message(
         conversation_id=conv_id,
         sender_id=current_user.id,
         content=body.content,
     )
     db.add(msg)
+    recipient_id = conv.user2_id if conv.user1_id == current_user.id else conv.user1_id
+    db.add(Notification(user_id=recipient_id, from_user_id=current_user.id, type="message"))
     db.commit()
     db.refresh(msg)
     return msg

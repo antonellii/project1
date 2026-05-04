@@ -3,11 +3,6 @@ import { get, post, del } from '../api.js'
 let activeFilter = 'geral'
 
 export async function mount(container) {
-  const tiles = Array.from({ length: 12 }, (_, i) => {
-    const emojis = ['🌙','⭐','🌟','✨','🌌','🌠','🌃','🌆','🌇','🌉','🌁','🌅']
-    return `<div class="explore-tile">${emojis[i]}</div>`
-  }).join('')
-
   container.innerHTML = `
     <div class="explore-header">
       <h1>Explorar</h1>
@@ -24,8 +19,14 @@ export async function mount(container) {
 
     <div id="search-results"></div>
 
-    <div class="explore-grid" id="explore-grid">
-      ${tiles}
+    <div class="page-placeholder" id="explore-placeholder">
+      <div class="placeholder-icon">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </div>
+      <h1>Explorar</h1>
+      <p>Comece a explorar para receber sugestões e resultados.<br/>Busque por perfis, postagens ou palavras-chave.</p>
     </div>
   `
 
@@ -50,9 +51,9 @@ export async function mount(container) {
 }
 
 async function runSearch(q) {
-  const resultsEl = document.getElementById('search-results')
-  const gridEl    = document.getElementById('explore-grid')
-  gridEl.style.display = 'none'
+  const resultsEl     = document.getElementById('search-results')
+  const placeholder   = document.getElementById('explore-placeholder')
+  if (placeholder) placeholder.style.display = 'none'
 
   if (activeFilter === 'postagens') {
     resultsEl.innerHTML = `

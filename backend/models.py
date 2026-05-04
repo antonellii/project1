@@ -18,11 +18,12 @@ class User(Base):
 class Post(Base):
     __tablename__ = "posts"
 
-    id         = Column(Integer, primary_key=True, index=True)
-    user_id    = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    image_url  = Column(String(500), nullable=True)
-    caption    = Column(String(2000), nullable=True)
-    created_at = Column(DateTime, server_default=func.now())
+    id          = Column(Integer, primary_key=True, index=True)
+    user_id     = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    title       = Column(String(200), nullable=False, default="")
+    image_url   = Column(String(500), nullable=True)
+    caption     = Column(String(2000), nullable=True)
+    created_at  = Column(DateTime, server_default=func.now())
 
 
 class Follow(Base):
@@ -31,6 +32,17 @@ class Follow(Base):
     follower_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
     followed_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
     created_at  = Column(DateTime, server_default=func.now())
+
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id           = Column(Integer, primary_key=True, index=True)
+    user_id      = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    from_user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    type         = Column(String(20), nullable=False)  # follow | message | post
+    read         = Column(Boolean, default=False)
+    created_at   = Column(DateTime, server_default=func.now())
 
 
 class Conversation(Base):

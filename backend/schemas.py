@@ -65,6 +65,17 @@ class UserUpdate(BaseModel):
     avatar_url:   str | None = Field(default=None, max_length=500)
 
 
+# ── Notificações ──────────────────────────────────────
+class NotificationOut(BaseModel):
+    id:           int
+    type:         str
+    read:         bool
+    created_at:   datetime
+    from_user:    UserProfileOut
+
+    model_config = {"from_attributes": True}
+
+
 # ── Mensagens ─────────────────────────────────────────
 class MessageIn(BaseModel):
     content: str = Field(min_length=1, max_length=2000)
@@ -89,13 +100,14 @@ class ConversationOut(BaseModel):
     unread_count:    int = 0
 
 
-# ── Post (estrutura base — implementacao futura) ───────
+# ── Post ──────────────────────────────────────────────
 class PostOut(BaseModel):
-    id:         int
-    user_id:    int
-    image_url:  str | None
-    caption:    str | None
-    created_at: datetime
+    id:          int
+    user_id:     int
+    title:       str
+    image_url:   str | None
+    caption:     str | None
+    created_at:  datetime
 
     model_config = {"from_attributes": True}
 
