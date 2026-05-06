@@ -162,14 +162,17 @@ async function navigate() {
     return
   }
 
-  const activeNav    = ['home','explore','publish','messages','profile'].includes(hash) ? hash : ''
-  const isFullLayout = hash === 'messages'
-  const currentTheme = localStorage.getItem('lunar_theme') || 'light'
+  const activeNav     = ['home','explore','publish','messages','profile'].includes(hash) ? hash : ''
+  const isFullLayout  = hash === 'messages'
+  const isMasonry     = hash === 'home'
+  const currentTheme  = localStorage.getItem('lunar_theme') || 'light'
+
+  const mainClass = isFullLayout ? 'content--full' : isMasonry ? 'content--masonry' : 'content'
 
   app.innerHTML = `
     <div class="layout">
       ${sidebar(activeNav)}
-      <main class="${isFullLayout ? 'content--full' : 'content'}" id="page-content"></main>
+      <main class="${mainClass}" id="page-content"></main>
       <div class="notif-wrapper">
         <button class="notif-btn" id="notif-btn" title="Notificações">
           ${BELL_ICON}

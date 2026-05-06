@@ -1,6 +1,30 @@
 import { get, patch, post, del } from '../api.js'
+import { buildCarousel } from '../carousel.js'
 
 const API_BASE = 'http://localhost:8000'
+
+const ART_STYLES = [
+  { id: 'visual',  label: 'Visual',  emoji: '🎨' },
+  { id: 'digital', label: 'Digital', emoji: '💻' },
+  { id: '3d',      label: '3D',      emoji: '🧊' },
+]
+
+const INTERESTS_META = [
+  { id: 'visual',  label: 'Visual',  emoji: '🎨' },
+  { id: 'digital', label: 'Digital', emoji: '💻' },
+  { id: '3d',      label: '3D',      emoji: '🧊' },
+]
+
+function interestChips(interests) {
+  if (!interests) return ''
+  const active = interests.split(',').map(s => s.trim()).filter(Boolean)
+  if (!active.length) return ''
+  const chips = INTERESTS_META
+    .filter(i => active.includes(i.id))
+    .map(i => `<span class="profile-interest-chip">${i.emoji} ${i.label}</span>`)
+    .join('')
+  return `<div class="profile-interest-chips">${chips}</div>`
+}
 
 export function avatarHtml(user, cls = 'avatar') {
   if (user.avatar_url) {
@@ -52,6 +76,7 @@ function renderProfile(container, user, posts, isOwn) {
           </button>
         </div>
         <p class="profile-bio">${user.bio || '<span style="font-style:italic;color:var(--text-muted)">Sem bio ainda.</span>'}</p>
+        ${interestChips(user.interests)}
         <p class="profile-meta">Membro desde ${joinedYear}</p>
         <div style="margin-top:1rem">${actionBtn}</div>
       </div>
@@ -130,16 +155,13 @@ function postTile(p) {
 function openPostModal(post, user, isOwn = false) {
   const overlay = document.createElement('div')
   overlay.className = 'modal-overlay'
-  const img = post.image_url
-    ? `<img class="post-modal__img" src="${API_BASE}${post.image_url}" alt="${post.title}" />`
-    : `<div class="post-modal__img post-modal__img--empty">🌙</div>`
   const date = new Date(post.created_at).toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' })
 
   overlay.innerHTML = `
     <div class="modal modal--post">
       <button class="modal-close modal-close--abs" id="close-post">&times;</button>
       <h2 class="post-modal__title" id="modal-post-title">${post.title}</h2>
-      ${img}
+      <div id="profile-carousel-slot"></div>
       <div class="post-modal__body">
         <div class="post-modal__header">
           ${avatarHtml(user)}
@@ -157,6 +179,16 @@ function openPostModal(post, user, isOwn = false) {
             <input class="input" id="post-edit-title" value="${post.title}" maxlength="200" />
           </div>
           <div class="field">
+            <label>Categoria</label>
+            <div class="art-style-chips" id="post-edit-style-chips">
+              ${ART_STYLES.map(s => `
+                <button type="button" class="interest-chip ${post.art_style === s.id ? 'interest-chip--active' : ''}" data-style="${s.id}">
+                  <span>${s.emoji}</span> ${s.label}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+          <div class="field">
             <label>Descrição</label>
             <textarea class="textarea" id="post-edit-caption" maxlength="2000">${post.caption || ''}</textarea>
           </div>
@@ -170,6 +202,8 @@ function openPostModal(post, user, isOwn = false) {
   `
 
   document.body.appendChild(overlay)
+  const carouselEl = buildCarousel(post.images || (post.image_url ? [post.image_url] : []))
+  overlay.querySelector('#profile-carousel-slot').appendChild(carouselEl)
   overlay.querySelector('#close-post').addEventListener('click', () => overlay.remove())
   overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove() })
 
@@ -180,6 +214,14 @@ function openPostModal(post, user, isOwn = false) {
   const cancelBtn = overlay.querySelector('#cancel-post-edit')
   const saveBtn   = overlay.querySelector('#save-post-edit')
   const errEl     = overlay.querySelector('#post-edit-error')
+
+  overlay.querySelector('#post-edit-style-chips').addEventListener('click', e => {
+    const chip = e.target.closest('.interest-chip')
+    if (!chip) return
+    const already = chip.classList.contains('interest-chip--active')
+    overlay.querySelectorAll('#post-edit-style-chips .interest-chip').forEach(c => c.classList.remove('interest-chip--active'))
+    if (!already) chip.classList.add('interest-chip--active')
+  })
 
   editBtn.addEventListener('click', () => {
     form.style.display = 'flex'
@@ -204,6 +246,9 @@ function openPostModal(post, user, isOwn = false) {
       const formData = new FormData()
       formData.append('title',   overlay.querySelector('#post-edit-title').value.trim())
       formData.append('caption', overlay.querySelector('#post-edit-caption').value.trim())
+      const activeStyle = overlay.querySelector('#post-edit-style-chips .interest-chip--active')
+      if (activeStyle) formData.append('art_style', activeStyle.dataset.style)
+      else formData.append('art_style', '')
 
       const res = await fetch(`${API_BASE}/posts/${post.id}`, {
         method: 'PATCH',
@@ -336,6 +381,19 @@ function openEditModal(user, container) {
         <label>Bio</label>
         <textarea class="textarea" id="edit-bio" maxlength="500">${user.bio || ''}</textarea>
       </div>
+      <div class="field">
+        <label>Interesses de arte</label>
+        <div class="interest-chips" id="edit-interest-chips">
+          ${(() => {
+            const active = (user.interests || '').split(',').map(s => s.trim())
+            return INTERESTS_META.map(i => `
+              <button type="button" class="interest-chip ${active.includes(i.id) ? 'interest-chip--active' : ''}" data-interest="${i.id}">
+                <span>${i.emoji}</span> ${i.label}
+              </button>
+            `).join('')
+          })()}
+        </div>
+      </div>
       <div class="modal-actions">
         <button class="btn btn--ghost btn--sm" id="cancel-edit">Cancelar</button>
         <button class="btn btn--primary btn--sm" id="save-edit" style="width:auto">Salvar</button>
@@ -348,6 +406,11 @@ function openEditModal(user, container) {
   const uploadBtn   = overlay.querySelector('#avatar-upload-btn')
   const preview     = overlay.querySelector('#avatar-preview')
   let   pendingFile = null
+
+  overlay.querySelector('#edit-interest-chips').addEventListener('click', e => {
+    const chip = e.target.closest('.interest-chip')
+    if (chip) chip.classList.toggle('interest-chip--active')
+  })
 
   uploadBtn.addEventListener('click', () => fileInput.click())
 
@@ -382,9 +445,14 @@ function openEditModal(user, container) {
         if (!res.ok) throw new Error('Erro ao enviar imagem')
       }
 
+      const selectedInterests = [...overlay.querySelectorAll('#edit-interest-chips .interest-chip--active')]
+        .map(c => c.dataset.interest)
+        .join(',')
+
       await patch('/users/me', {
         display_name: overlay.querySelector('#edit-name').value,
         bio:          overlay.querySelector('#edit-bio').value || null,
+        interests:    selectedInterests || null,
       })
 
       overlay.remove()

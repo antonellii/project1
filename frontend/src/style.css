@@ -1191,6 +1191,26 @@ input, textarea { font-family: inherit; }
   max-width: 400px;
 }
 
+.profile-interest-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.profile-interest-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 0.4rem;
+  border: 1.5px solid var(--yellow-dark);
+  background: var(--yellow-light);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
 .profile-meta {
   font-size: 0.875rem;
   color: var(--text-muted);
@@ -1262,9 +1282,10 @@ input, textarea { font-family: inherit; }
 /* ── Modal de post ──────────────────────────────────── */
 .modal--post {
   padding: 0;
-  max-width: 780px;
+  max-width: 680px;
   width: 100%;
-  overflow: hidden;
+  overflow: visible;
+  align-self: flex-start;
 }
 
 .modal-close--abs {
@@ -1291,13 +1312,14 @@ input, textarea { font-family: inherit; }
 
 .post-modal__img {
   width: 100%;
-  aspect-ratio: 3 / 2;
-  object-fit: cover;
+  max-height: 72vh;
+  object-fit: contain;
   display: block;
+  background: #111;
 }
 
 .post-modal__img--empty {
-  aspect-ratio: 3 / 2;
+  min-height: 220px;
   background: var(--yellow-light);
   display: flex;
   align-items: center;
@@ -1447,9 +1469,11 @@ input, textarea { font-family: inherit; }
   inset: 0;
   background: rgba(0,0,0,0.4);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   z-index: 1000;
+  overflow-y: auto;
+  padding: 2rem 1rem;
 }
 
 .modal {
@@ -1531,4 +1555,577 @@ input, textarea { font-family: inherit; }
   flex: 1;
   min-width: 0;
   cursor: pointer;
+}
+
+/* ── Interesse chips (registro + publicar) ─────────── */
+.interest-chips,
+.art-style-chips {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.interest-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 1rem;
+  border-radius: 99px;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+  font-family: inherit;
+}
+
+.interest-chip:hover {
+  border-color: var(--yellow);
+  background: var(--yellow-light);
+  color: var(--text);
+}
+
+.interest-chip--active {
+  background: var(--yellow);
+  border-color: var(--yellow-dark);
+  color: var(--text);
+}
+
+/* ── Layout masonry (home) ──────────────────────────── */
+.content--masonry {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  min-height: 100vh;
+  overflow-x: hidden;
+  padding: 0;
+}
+
+.masonry-home {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  padding: 1.5rem 1.5rem 4rem;
+  align-items: start;
+}
+
+.masonry-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-width: 0;
+}
+
+.masonry-col-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0 0.75rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 2px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+}
+
+.masonry-col-icon { font-size: 1rem; }
+
+.masonry-col-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+}
+
+.masonry-col-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.masonry-loading {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  padding: 0.5rem 0;
+}
+
+/* ── Cards masonry ──────────────────────────────────── */
+.masonry-card {
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--white);
+  border: 1px solid var(--border);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+
+.masonry-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.13);
+}
+
+.masonry-card__img-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.masonry-card__img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Badge de categoria na miniatura (sobre a imagem) */
+.masonry-thumb-badge {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  padding: 0.18rem 0.55rem;
+  border-radius: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: rgba(0,0,0,0.52);
+  color: #fff;
+  backdrop-filter: blur(6px);
+  letter-spacing: 0.3px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Badge de categoria — quadradinho com borda arredondada */
+.masonry-cat-badge {
+  display: inline-block;
+  flex-shrink: 0;
+  padding: 0.15rem 0.5rem;
+  border-radius: 0.35rem;
+  border: 1.5px solid var(--border);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  background: var(--bg);
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+.masonry-card__overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0.6rem 0.75rem;
+  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.masonry-card__author {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.masonry-card__avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.masonry-card__avatar-letter {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--yellow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.masonry-card__author-name {
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+}
+
+.masonry-card__views {
+  color: rgba(255,255,255,0.85);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.masonry-card__info {
+  padding: 0.6rem 0.75rem 0.75rem;
+}
+
+.masonry-card__title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+
+.masonry-card__title {
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--text);
+  line-height: 1.3;
+  flex: 1;
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.masonry-card__stats {
+  display: flex;
+  gap: 0.6rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.3rem;
+}
+
+/* Card sem imagem */
+.masonry-card--text {
+  padding: 1.1rem;
+  background: var(--yellow-light);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-height: 100px;
+}
+
+[data-theme="dark"] .masonry-card--text {
+  background: var(--white);
+}
+
+.masonry-card__caption {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.masonry-card__text-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 0.5rem;
+}
+
+/* ── Modal título com badge ─────────────────────────── */
+.post-modal__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.5rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.post-modal__title-text {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Ações do post (curtir / comentar) ──────────────── */
+.post-modal__actions {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.5rem 0 0.25rem;
+}
+
+.post-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 1rem;
+  border-radius: 99px;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition);
+  font-family: inherit;
+}
+
+.post-action-btn:hover {
+  border-color: var(--yellow);
+  background: var(--yellow-light);
+  color: var(--text);
+}
+
+.post-action-btn--liked {
+  background: #FEE2E2;
+  border-color: #FCA5A5;
+  color: #DC2626;
+}
+
+.post-action-btn--liked:hover {
+  background: #FEE2E2;
+  border-color: #EF4444;
+}
+
+.post-modal__comment-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 0.45rem 0.5rem;
+}
+
+/* ── Comentários ────────────────────────────────────── */
+.post-comments {
+  border-top: 1px solid var(--border);
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.comment-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.comment-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.comment-author {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.comment-text {
+  font-size: 0.85rem;
+  color: var(--text);
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.comment-input-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.comment-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  resize: none;
+  overflow: hidden;
+  line-height: 1.5;
+  min-height: 38px;
+}
+
+.comment-submit-btn {
+  align-self: flex-end;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.8rem;
+}
+
+/* ── Carousel ───────────────────────────────────────── */
+.carousel-wrap { width: 100%; }
+
+.carousel {
+  position: relative;
+  overflow: hidden;
+  background: #000;
+  line-height: 0;
+}
+
+.carousel-track {
+  display: flex;
+  transition: transform 0.32s ease;
+}
+
+.carousel-img {
+  min-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  display: block;
+  background: #111;
+}
+
+.carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0,0,0,0.45);
+  color: #fff;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition);
+}
+
+.carousel-btn:hover { background: rgba(0,0,0,0.7); }
+.carousel-btn--prev { left: 0.6rem; }
+.carousel-btn--next { right: 0.6rem; }
+
+.carousel-dots {
+  position: absolute;
+  bottom: 0.6rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.35rem;
+  z-index: 10;
+}
+
+.carousel-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.45);
+  transition: background var(--transition);
+}
+
+.carousel-dot--active { background: #fff; }
+
+.carousel-counter {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0,0,0,0.4);
+  padding: 0.15rem 0.5rem;
+  border-radius: 99px;
+  z-index: 10;
+}
+
+/* ── Multi-image upload ──────────────────────────────── */
+.img-thumbs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.5rem;
+}
+
+.img-thumb-wrap {
+  position: relative;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  aspect-ratio: 1;
+  background: var(--border);
+}
+
+.img-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.img-thumb-remove {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  border: none;
+  font-size: 0.7rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.img-thumb-remove:hover { background: #EF4444; }
+
+.img-thumb-badge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-align: center;
+  background: rgba(0,0,0,0.5);
+  color: #fff;
+  padding: 0.15rem 0;
+}
+
+.img-add-slot {
+  aspect-ratio: 1;
+  border-radius: 0.5rem;
+  border: 2px dashed var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all var(--transition);
+}
+
+.img-add-slot:hover {
+  border-color: var(--yellow-dark);
+  background: var(--yellow-light);
+  color: var(--text);
+}
+
+/* Coluna vazia */
+.masonry-empty-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  background: var(--white);
+  border-radius: var(--radius);
+  border: 1px dashed var(--border);
+  line-height: 1.5;
 }

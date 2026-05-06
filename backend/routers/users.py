@@ -27,6 +27,7 @@ def build_profile(user: User, db: Session, current_user: User | None) -> dict:
         "display_name":    user.display_name,
         "bio":             user.bio,
         "avatar_url":      user.avatar_url,
+        "interests":       user.interests,
         "created_at":      user.created_at,
         "followers_count": followers_count,
         "following_count": following_count,

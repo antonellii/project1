@@ -9,6 +9,7 @@ class RegisterIn(BaseModel):
     display_name: str = Field(min_length=1, max_length=100)
     email:        str = Field(min_length=5, max_length=200)
     password:     str = Field(min_length=8, max_length=100)
+    interests:    list[str] = Field(default_factory=list)
 
     @field_validator("password")
     @classmethod
@@ -40,6 +41,7 @@ class UserOut(BaseModel):
     email:           str
     bio:             str | None
     avatar_url:      str | None
+    interests:       str | None = None
     created_at:      datetime
 
     model_config = {"from_attributes": True}
@@ -51,6 +53,7 @@ class UserProfileOut(BaseModel):
     display_name:    str
     bio:             str | None
     avatar_url:      str | None
+    interests:       str | None = None
     created_at:      datetime
     followers_count: int = 0
     following_count: int = 0
@@ -63,6 +66,7 @@ class UserUpdate(BaseModel):
     display_name: str | None = Field(default=None, min_length=1, max_length=100)
     bio:          str | None = Field(default=None, max_length=500)
     avatar_url:   str | None = Field(default=None, max_length=500)
+    interests:    str | None = Field(default=None, max_length=100)
 
 
 # ── Notificações ──────────────────────────────────────
@@ -106,7 +110,10 @@ class PostOut(BaseModel):
     user_id:     int
     title:       str
     image_url:   str | None
+    images:      list[str] = []
     caption:     str | None
+    art_style:   str | None = None
+    views:       int = 0
     created_at:  datetime
 
     model_config = {"from_attributes": True}

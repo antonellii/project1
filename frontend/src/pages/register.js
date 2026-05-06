@@ -9,6 +9,12 @@ const RULES = [
   { id: 'symbol', label: 'Pelo menos um símbolo',  test: v => /[!@#$%^&*()_\-+=\[\]{};':"\\|,.<>/?]/.test(v) },
 ]
 
+const INTERESTS = [
+  { id: 'visual',  label: 'Visual',  emoji: '🎨' },
+  { id: 'digital', label: 'Digital', emoji: '💻' },
+  { id: '3d',      label: '3D',      emoji: '🧊' },
+]
+
 function validatePassword(value) {
   return RULES.map(r => ({ ...r, ok: r.test(value) }))
 }
@@ -62,6 +68,19 @@ export function mount(container) {
                 placeholder="Repita a senha" required />
               <span class="confirm-msg" id="confirm-msg"></span>
             </div>
+            <div class="field">
+              <label>Interesses de arte <span style="color:var(--text-muted);font-weight:400">(opcional)</span></label>
+              <div class="interest-chips" id="interest-chips">
+                ${INTERESTS.map(i => `
+                  <button type="button" class="interest-chip" data-interest="${i.id}">
+                    <span>${i.emoji}</span> ${i.label}
+                  </button>
+                `).join('')}
+              </div>
+              <p style="font-size:0.78rem;color:var(--text-muted);margin-top:0.3rem">
+                Selecione o que você curte — isso define seu feed de arte.
+              </p>
+            </div>
           </div>
           <button class="btn btn--primary" type="submit" id="submit-btn">Criar conta</button>
         </form>
@@ -73,6 +92,12 @@ export function mount(container) {
   const senhaEl   = document.getElementById('reg-senha')
   const confirmEl = document.getElementById('reg-confirm')
   const submitBtn = document.getElementById('submit-btn')
+  const chipsEl   = document.getElementById('interest-chips')
+
+  chipsEl.addEventListener('click', e => {
+    const chip = e.target.closest('.interest-chip')
+    if (chip) chip.classList.toggle('interest-chip--active')
+  })
 
   function updateRules() {
     const value   = senhaEl.value
@@ -128,6 +153,9 @@ export function mount(container) {
       return
     }
 
+    const interests = [...document.querySelectorAll('.interest-chip--active')]
+      .map(c => c.dataset.interest)
+
     submitBtn.disabled   = true
     submitBtn.textContent = 'Criando conta...'
 
@@ -137,6 +165,7 @@ export function mount(container) {
         username:     document.getElementById('reg-username').value.replace('@', ''),
         email:        document.getElementById('reg-email').value,
         password:     senha,
+        interests,
       })
       setToken(data.access_token)
       location.hash = 'home'

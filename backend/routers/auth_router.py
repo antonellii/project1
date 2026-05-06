@@ -18,11 +18,15 @@ def register(dados: RegisterIn, db: Session = Depends(get_db)):
     if db.query(User).filter(User.display_name == dados.display_name).first():
         raise HTTPException(status_code=409, detail="Este nome de exibição já está em uso")
 
+    valid = {"visual", "digital", "3d"}
+    interests_str = ",".join(i for i in dados.interests if i in valid) or None
+
     user = User(
         username=dados.username,
         display_name=dados.display_name,
         email=dados.email,
         password_hash=hash_password(dados.password),
+        interests=interests_str,
     )
     db.add(user)
     db.commit()
